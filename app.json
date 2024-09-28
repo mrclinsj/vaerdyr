@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "vaerdyr",
-    "slug": "vaerdyr",
+    "name": "vardyr",
+    "slug": "vardyr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,15 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.skjulestadorg.vaerdyr"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.skjulestadorg.vaerdyr"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -33,18 +31,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "b5cdc3be-eaca-4f17-8e74-584308ca7567"
-      }
-    },
-    "owner": "skjulestad-org",
-    "updates": {
-      "url": "https://u.expo.dev/b5cdc3be-eaca-4f17-8e74-584308ca7567"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     }
   }
 }
