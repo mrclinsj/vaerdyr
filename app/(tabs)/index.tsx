@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import axios from 'axios';
 import * as Location from 'expo-location';
-import weatherAnimal from '@/assets/images/weatherChick.png';
-import sunGlasses from '@/assets/images/sunGlasses.png';
+import defaultFrame from '@/assets/images/fox/defaultFrame.png'
+import sunGlasses from '@/assets/images/fox/sunGlasses.png';
 import clouds from '@/assets/images/clouds.png';
 import sunShine from '@/assets/images/sunShine.png';
-import winterHat from '@/assets/images/winterHat.png';
-import scarf from '@/assets/images/scarf.png';
+import winterHat from '@/assets/images/fox/winterHat.png';
+import scarf from '@/assets/images/fox/scarf.png';
 
 export default function TabOneScreen() {
   const [weather, setWeather] = useState({
@@ -70,12 +70,12 @@ export default function TabOneScreen() {
       ) : (
         <>
           <Text style={styles.title}>{weather.main}</Text>
-          <Image source={weatherAnimal} style={styles.image} />
+          <Image source={defaultFrame} style={styles.image} />
 
           {weather.main === 'Clear' && <Image source={sunShine} style={styles.glasses} />}
           {weather.main === 'Clouds' && <Image source={clouds} style={styles.glasses} />}
 
-          {weather.temperature !== null && weather.temperature > 20 && (
+          {weather.temperature !== null && weather.temperature > 20 || weather.main === 'Clear' &&(
             <Image source={sunGlasses} style={styles.glasses} />
           )}
           {weather.temperature !== null && weather.temperature < 10 && (
