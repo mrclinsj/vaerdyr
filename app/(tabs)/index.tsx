@@ -4,11 +4,12 @@ import { Text, View } from '@/components/Themed';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import defaultFrame from '@/assets/images/fox/defaultFrame.png'
-import sunGlasses from '@/assets/images/fox/sunGlasses.png';
+import sunGlasses from '@/assets/images/fox/head/sunGlasses.png';
 import clouds from '@/assets/images/clouds.png';
 import sunShine from '@/assets/images/sunShine.png';
-import winterHat from '@/assets/images/fox/winterHat.png';
-import scarf from '@/assets/images/fox/scarf.png';
+import winterHat from '@/assets/images/fox/head/winterHat.png';
+import cap from '@/assets/images/fox/head/cap.png';
+import scarf from '@/assets/images/fox/head/scarf.png';
 
 export default function TabOneScreen() {
   const [weather, setWeather] = useState({
@@ -79,7 +80,7 @@ export default function TabOneScreen() {
             <Image source={sunGlasses} style={styles.glasses} />
           )}
           {weather.temperature !== null && weather.temperature < 10 && (
-            <Image source={winterHat} style={styles.glasses} />
+            <Image source={cap} style={styles.glasses} />
           )}
           {weather.temperature !== null && weather.temperature < 5 && (
             <Image source={scarf} style={styles.glasses} />
