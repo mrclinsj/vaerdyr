@@ -1,8 +1,11 @@
-import { StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Alert, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import axios from 'axios';
 import * as Location from 'expo-location';
+
+// Get screen dimensions
+const { width: screenWidth } = Dimensions.get('window');
 
 // Head
 import winterHat from '@/assets/images/fox/head/winterHat.png';
@@ -12,14 +15,18 @@ import sunGlasses from '@/assets/images/fox/head/sunGlasses.png';
 import blankHead from '@/assets/images/fox/head/blankHeadwear.png';
 
 // Background
-import defaultFrame from '@/assets/images/fox/defaultFrame.png';
+import defaultFrame from '@/assets/images/fox/body.png';
 import greenGround from '@/assets/images/fox/background/greenGround.png';
 import drowningWater from '@/assets/images/fox/background/drowningWater.png';
 import sunShine from '@/assets/images/fox/background/lilSunshine.png';
 import water from '@/assets/images/fox/background/water.png';
 import snow from '@/assets/images/fox/background/snow.png';
+import fallingSnow from '@/assets/images/fox/background/fallingSnow.png';
 import clouds from '@/assets/images/clouds.png';
-
+import rain from '@/assets/images/fox/background/rain.png'
+import drizzle from '@/assets/images/fox/background/drizzle.png'
+import defaultGRound from '@/assets/images/fox/background/defaultGround.png'
+import blueGround from '@/assets/images/fox/background/blueGround.png'
 // Accessories
 import waterBottle from '@/assets/images/fox/accessories/waterBottle.png';
 
@@ -100,22 +107,36 @@ export default function TabOneScreen() {
   // Function to choose the background based on the weather
   const getBackgroundImage = () => {
     if (weather.main === 'Clear' && weather.temperature !== null && weather.temperature > 0) {
-      return [greenGround, sunShine]; // Return both images
+      return [sunShine]; // Return both images
     }
     if (weather.main === 'Clear') return [sunShine];
-    if (weather.main === 'Clouds') return [clouds];
-    if (weather.main === 'Drizzle') return [water];
-    if (weather.main === 'Rain' || weather.main === 'Thunderstorm') return [drowningWater];
-    if (weather.main === 'Snow') return [snow];
-    return [greenGround]; // default background
+    if (weather.main === 'Clouds' || 'Mist' || 'Haze' || 'Fog') return [clouds];
+    if (weather.main === 'Drizzle') return [drizzle, clouds, ];
+    if (weather.main === 'Rain') return [water, rain, clouds,];
+    if (weather.main === 'Thunderstorm' || 'Tornado') return [drowningWater];
+    if (weather.main === 'Snow') return [ fallingSnow,];
+    return [blankHead]; // default background
   };
+    // Function to choose the background based on the weather
+    const getGroundImage = () => {
+      if (weather.main === 'Clear' && weather.temperature !== null && weather.temperature > 0) {
+        return [greenGround]; // Return both images
+      }
+      if (weather.main === 'Clear') return [defaultGRound, sunGlasses];
+      if (weather.main === 'Clouds' || 'Mist' || 'Haze' || 'Fog') return [blueGround];
+      if (weather.main === 'Drizzle') return [blueGround];
+      if (weather.main === 'Rain') return [ blueGround ];
+      if (weather.main === 'Thunderstorm' || 'Tornado') return [ drowningWater, clouds];
+      if (weather.main === 'Snow') return [snow];
+      return [defaultGRound]; // default background
+    };
+
 
   // Function to choose the right headwear
   const getHeadwear = () => {
-    if (weather.temperature !== null && weather.temperature > 20) return [sunGlasses];
     if (weather.temperature !== null && weather.temperature < 10) return [cap];
     if (weather.temperature !== null && weather.temperature < 5) return [scarf];
-    if (weather.temperature !== null && weather.temperature < 0) return [winterHat];
+    if (weather.temperature !== null && weather.temperature < 0) return [winterHat, scarf];
     return [blankHead];
   };
 
@@ -123,13 +144,13 @@ export default function TabOneScreen() {
   const getChestWear = () => {
     if (weather.main === 'Rain') return [rainCoat];
     if (weather.windSpeed && weather.temperature !== null && weather.windSpeed > 7 && weather.temperature > 10) return [windBreaker];
-    if (weather.temperature !== null && weather.temperature < 10) return [puffer];
+    if (weather.temperature !== null && weather.temperature < 18) return [puffer];
     if (weather.temperature !== null && weather.temperature < 20) return [tShirt];
     return [singlet];
   };
 
   const getAccessories = () => {
-    if (weather.humidity !== null && weather.humidity > 60) return [waterBottle];
+    if (weather.humidity !== null && weather.humidity < 30 || weather.main === 'Clear' || weather.temperature !== null && weather.temperature > 20) return [waterBottle, sunGlasses];
     return [blankHead];
   };
 
@@ -144,7 +165,7 @@ export default function TabOneScreen() {
   // Function to choose the right footwear
   const getFootwear = () => {
     if (weather.main === 'Rain') return [rubberBoots];
-    if (weather.windSpeed !== null && weather.windSpeed > 5) return [rubberBoots];
+    if (weather.windSpeed !== null && weather.windSpeed > 4) return [rubberBoots];
     if (weather.temperature !== null && weather.temperature > 20) return [sandals];
     return [boots];
   };
@@ -156,49 +177,53 @@ export default function TabOneScreen() {
       ) : (
         <>
           <Text style={styles.title}>{weather.main}</Text>
-
+          <>
+          {/* Map through background images */}
           {getBackgroundImage().map((bg, index) => (
             <Image key={index} source={bg} style={styles.background} />
           ))}
+             {getGroundImage().map((bg, index) => (
+            <Image key={index} source={bg} style={styles.ground} />
+          ))}
 
-          <Image source={defaultFrame} style={styles.image} /> 
+          <Image source={defaultFrame} style={styles.responsiveImage} /> 
           {getHeadwear() && getHeadwear().map((headItem, index) => (
-            <Image key={index} source={headItem} style={styles.image} />
+            <Image key={index} source={headItem} style={styles.responsiveImage} />
           ))}
 
           {getChestWear().map((chestItem, index) => (
-            <Image key={index} source={chestItem} style={styles.image} />
+            <Image key={index} source={chestItem} style={styles.responsiveImage} />
           ))}
 
           {getAccessories().map((accessoryItem, index) => (
-            <Image key={index} source={accessoryItem} style={styles.image} />
+            <Image key={index} source={accessoryItem} style={styles.responsiveImage} />
           ))}
 
           {getLeggings().map((legItem, index) => (
-            <Image key={index} source={legItem} style={styles.image} />
+            <Image key={index} source={legItem} style={styles.responsiveImage} />
           ))}
 
           {getFootwear().map((footItem, index) => (
-            <Image key={index} source={footItem} style={styles.image} />
+            <Image key={index} source={footItem} style={styles.responsiveImage} />
           ))}
-
+          </> 
           {weather.temperature !== null ? (
             <>
               <Text style={styles.desc}>{weather.description}</Text>
               <Text style={styles.deg}>{weather.temperature} °C</Text>
               <Text style={styles.deets}>Feels like: {weather.feelsLike} °C</Text>
               <Text style={styles.deets}>Wind Speed: {weather.windSpeed} m/s</Text>
-              <Text style={styles.deets}>Humidity: {weather.humidity}%</Text>
+              <Text style={styles.deetsBottom}>Humidity: {weather.humidity}%</Text>
             </>
           ) : (
             <Text>Fetching weather data...</Text>
           )}
 
-  
-          <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-          <TouchableOpacity onPress={fetchWeatherData} style={styles.refreshButton}>
+            <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+            <TouchableOpacity onPress={fetchWeatherData} style={styles.refreshButton}>
             <Text style={styles.refreshButtonText}>Refresh Weather</Text>
           </TouchableOpacity>
+          
         </>
       )}
     </View>
@@ -211,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 350,
-    backgroundColor: '#09011f'
+    backgroundColor: '#09011f',
   },
   title: {
     fontSize: 30,
@@ -225,6 +250,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#EBCEF8',
   },
+  deetsBottom: {
+    fontSize: 20,
+    color: '#EBCEF8',
+    marginBottom: 10,
+  },
   deg: {
     fontSize: 30,
     fontWeight: '700',
@@ -235,40 +265,44 @@ const styles = StyleSheet.create({
   },
   desc: {
     fontSize: 24,
-    marginBottom: 10,
     color: '#D69DF1',
+    marginTop: 'auto',
   },
-  image: {
-    width: '100%', // Full width of the screen
-    height: undefined, // This will make the height dynamic
-    aspectRatio: 1,
-    marginVertical: 10,
+  responsiveImage: {
     position: 'absolute',
     top: 100,
+    width: screenWidth * 1, // 80% of the screen width
+    height: screenWidth * 1, // Keep it square
+    marginVertical: 10,
   },
   background: {
     position: 'absolute',
-    top: 100,
-    width: '100%', // Full width of the screen
-    height: undefined, // This will make the height dynamic
-    aspectRatio: 1,
+    top: 50,
+    width: screenWidth * 1, // 90% of the screen width
+    height: screenWidth * 1, // Keep it square
+  },
+  ground: {
+    position: 'absolute',
+    top: 110,
+    width: screenWidth * 1, // 90% of the screen width
+    height: screenWidth * 1, // Keep it square
   },
   refreshButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#EBCEF8',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#D69DF1',
     borderRadius: 5,
+    marginBottom: screenWidth * 0.2,
   },
   refreshButtonText: {
     color: 'black',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 16,
   },
   separator: {
-    marginVertical: 30,
+    marginVertical: 10,
     height: 1,
-    width: '80%',
+    width: '40%',
   },
   error: {
     color: 'red',
