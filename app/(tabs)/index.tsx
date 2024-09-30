@@ -65,6 +65,8 @@ export default function TabOneScreen() {
     description: '',
     humidity: null,
     main: '',
+    sunrise: null,
+    sunset: null,
   });
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -74,8 +76,7 @@ export default function TabOneScreen() {
   const fetchWeatherData = async () => {
     if (location && apiKey) {
       const { latitude, longitude } = location;
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=no`;
-
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=en`;
       try {
         const response = await axios.get(url);
         const data = response.data;
@@ -86,6 +87,8 @@ export default function TabOneScreen() {
           description: data.weather[0].description,
           humidity: data.main.humidity,
           main: data.weather[0].main,
+          sunrise: data.sys.sunrise, // Fetch sunrise time
+          sunset: data.sys.sunset,   // Fetch sunset time
         });
       } catch (error) {
         console.error('Error fetching weather data:', error);
@@ -113,6 +116,42 @@ export default function TabOneScreen() {
     }
   }, [location]);
 
+
+    // Function to get current time in Unix format
+    const getCurrentTime = () => Math.floor(Date.now() / 1000);
+
+    // Function to determine background color based on time of day
+    const getBackgroundColor = () => {
+      const currentTime = getCurrentTime();
+      const { sunrise, sunset } = weather;
+  
+      if (sunrise && sunset) {
+        if (currentTime < sunrise || currentTime > sunset) {
+          return '#09011f'; // Dark blue for nighttime
+        } else {
+          return '#87CEEB'; // Light blue for daytime
+        }
+      }
+  
+      return '#EBCEF8'; // Default color if no data
+    };
+
+  // Function to determine text color based on time of day
+  const getTextColor = () => {
+    const currentTime = getCurrentTime();
+    const { sunrise, sunset } = weather;
+
+    if (sunrise && sunset) {
+      if (currentTime < sunrise || currentTime > sunset) {
+        return '#EBCEF8'; // White text for dark background
+      } else {
+        return '#09011f'; // Black text for light background
+      }
+    }
+
+    return '#000000'; // Default text color
+  };
+  
   // Function to choose the background based on the weather
   const getBackgroundImage = () => {
     if (weather.main === 'Clear') return [sunShine];
@@ -195,12 +234,12 @@ export default function TabOneScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
       {errorMsg ? (
-        <Text style={styles.error}>{errorMsg}</Text>
+        <Text style={[styles.error, { color: getTextColor() }]}>{errorMsg}</Text>
       ) : (
         <>
-          <Text style={styles.title}>{weather.main}</Text>
+          <Text style={[styles.title, { color: getTextColor() }]}>{weather.main}</Text>
           <>
           {/* Map through background images */}
           {getBackgroundImage().map((bg, index) => (
@@ -233,17 +272,17 @@ export default function TabOneScreen() {
           </> 
           {weather.temperature !== null ? (
             <>
-              <Text style={styles.desc}>{weather.description}</Text>
-              <Text style={styles.deg}>{weather.temperature} °C</Text>
-              <Text style={styles.deets}>Feels like: {weather.feelsLike} °C</Text>
-              <Text style={styles.deets}>Wind Speed: {weather.windSpeed} m/s</Text>
-              <Text style={styles.deetsBottom}>Humidity: {weather.humidity}%</Text>
+            <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
+            <Text style={[styles.deg, { color: getTextColor() }]}>{weather.temperature} °C</Text>
+            <Text style={[styles.deets, { color: getTextColor() }]}>Feels like: {weather.feelsLike} °C</Text>
+            <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
+            <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
             </>
           ) : (
             <Text>Fetching weather data...</Text>
           )}
 
-            <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+            <View style={styles.separator}/>
             <TouchableOpacity onPress={fetchWeatherData} style={styles.refreshButton}>
             <Text style={styles.refreshButtonText}>Refresh Weather</Text>
           </TouchableOpacity>
@@ -263,34 +302,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#09011f',
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
     position: 'absolute',
-    top: 10,
-    left: 10,
-    color: '#D69DF1',
+    top: 2,
+    left: 8,
   },
   deets: {
     fontSize: 20,
-    color: '#EBCEF8',
+    fontWeight: '600',
   },
   deetsBottom: {
     fontSize: 20,
-    color: '#EBCEF8',
-    marginBottom: 10,
+    fontWeight: '600',
   },
   deg: {
     fontSize: 30,
     fontWeight: '700',
     position: 'absolute',
-    top: 10,
-    right: 10,
-    color: '#D69DF1',
+    top: 2,
+    right: 8,
   },
   desc: {
-    fontSize: 24,
-    color: '#D69DF1',
+    fontSize: 28,
     marginTop: 'auto',
+    fontWeight: '700',
   },
   responsiveImage: {
     position: 'absolute',
@@ -316,7 +352,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: '#D69DF1',
     borderRadius: 5,
-    marginBottom: screenWidth * 0.2,
+    marginBottom: screenWidth * 0.1,
   },
   refreshButtonText: {
     color: 'black',
@@ -327,6 +363,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     height: 1,
     width: '40%',
+    backgroundColor: '#D69DF1'
   },
   error: {
     color: 'red',
