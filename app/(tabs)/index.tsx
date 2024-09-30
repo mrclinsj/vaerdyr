@@ -1,11 +1,23 @@
-import { StyleSheet, Alert, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, Alert, Image, TouchableOpacity, Dimensions, DeviceEventEmitter } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import * as Location from 'expo-location';
+import { useAppContext } from '@/app/AppContext'; // Import the context
+
 
 // Get screen dimensions
 const { width: screenWidth } = Dimensions.get('window');
+
+
+
+// Body Images
+import defaultFrame from '@/assets/images/fox/foxBody.png';
+import customBody1 from '@/assets/images/owl/owlBody.png';
+import customBody2 from '@/assets/images/bear/bearBody.png';
+import customBody3 from '@/assets/images/deer/deerBody.png';
+import body from '@/assets/images/fox/body.png'
 
 // Head
 import winterHat from '@/assets/images/fox/head/winterHat.png';
@@ -15,10 +27,10 @@ import sunGlasses from '@/assets/images/fox/head/sunGlasses.png';
 import blankHead from '@/assets/images/fox/head/blankHeadwear.png';
 
 // Background
-import defaultFrame from '@/assets/images/fox/body.png';
 import greenGround from '@/assets/images/fox/background/greenGround.png';
 import drowningWater from '@/assets/images/fox/background/drowningWater.png';
 import sunShine from '@/assets/images/fox/background/lilSunshine.png';
+import moon from '@/assets/images/fox/background/moon.png';
 import water from '@/assets/images/fox/background/water.png';
 import snow from '@/assets/images/fox/background/snow.png';
 import fallingSnow from '@/assets/images/fox/background/fallingSnow.png';
@@ -68,10 +80,35 @@ export default function TabOneScreen() {
     sunrise: null,
     sunset: null,
   });
+  const [selectedBody, setSelectedBody] = useState<string>('defaultFrame'); // Add selectedBody state
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const apiKey = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
+
+
+
+  // Load selected body image from AsyncStorage when component mounts
+  useEffect(() => {
+    const loadSettings = async () => {
+      const savedBody = await AsyncStorage.getItem('selectedBody');
+      if (savedBody) {
+        setSelectedBody(savedBody);
+      }
+    };
+    loadSettings();
+
+    // Listen for changes in body image
+    const listener = DeviceEventEmitter.addListener('bodyChanged', (newBody: string) => {
+      setSelectedBody(newBody); // Update the body image state
+    });
+
+    return () => {
+      listener.remove(); // Cleanup the listener when component unmounts
+    };
+  }, []);
+
+
 
   const fetchWeatherData = async () => {
     if (location && apiKey) {
@@ -152,9 +189,39 @@ export default function TabOneScreen() {
     return '#000000'; // Default text color
   };
   
+  // Function to dynamically select the body image
+  const getBodyImage = () => {
+    if (selectedBody === 'customBody1') {
+      return customBody1;
+    } else if (selectedBody === 'customBody2') {
+      return customBody2;
+    }else if (selectedBody === 'customBody3') {
+      return customBody3;
+    }
+    return defaultFrame;
+  };
+
+  
+  //get the correct sky
+  const getSky = () => {
+    const currentTime = getCurrentTime(); // Get current time in Unix format
+    const { sunrise, sunset } = weather;
+  
+    if (sunrise && sunset) {
+      if (currentTime < sunrise || currentTime > sunset) {
+        return moon; // Nighttime
+      } else {
+        return sunShine; // Daytime
+      }
+    }
+  
+    return sunShine; // Default to sun if no data
+  };
+
+
   // Function to choose the background based on the weather
   const getBackgroundImage = () => {
-    if (weather.main === 'Clear') return [sunShine];
+    if (weather.main === 'Clear') return [blankHead];
     if (weather.main === 'Clouds') return [clouds];
     if (weather.main === 'Mist') return [clouds];
     if (weather.main === 'Haze') return [clouds];
@@ -241,6 +308,8 @@ export default function TabOneScreen() {
         <>
           <Text style={[styles.title, { color: getTextColor() }]}>{weather.main}</Text>
           <>
+          <Image source={getSky()} style={styles.responsiveImage} />
+
           {/* Map through background images */}
           {getBackgroundImage().map((bg, index) => (
             <Image key={index} source={bg} style={styles.background} />
@@ -249,11 +318,8 @@ export default function TabOneScreen() {
             <Image key={index} source={bg} style={styles.ground} />
           ))}
 
-          <Image source={defaultFrame} style={styles.responsiveImage} /> 
-          {getHeadwear() && getHeadwear().map((headItem, index) => (
-            <Image key={index} source={headItem} style={styles.responsiveImage} />
-          ))}
-
+<Image source={require('@/assets/images/fox/body.png')} style={styles.responsiveImage} />
+          
           {getChestWear().map((chestItem, index) => (
             <Image key={index} source={chestItem} style={styles.responsiveImage} />
           ))}
@@ -261,7 +327,12 @@ export default function TabOneScreen() {
           {getAccessories().map((accessoryItem, index) => (
             <Image key={index} source={accessoryItem} style={styles.responsiveImage} />
           ))}
-
+          
+                {/* Render body image based on selectedBody */}
+                <Image source={getBodyImage()} style={styles.responsiveImage} />
+          {getHeadwear() && getHeadwear().map((headItem, index) => (
+            <Image key={index} source={headItem} style={styles.responsiveImage} />
+          ))}
           {getLeggings().map((legItem, index) => (
             <Image key={index} source={legItem} style={styles.responsiveImage} />
           ))}
