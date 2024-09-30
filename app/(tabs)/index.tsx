@@ -27,6 +27,15 @@ import rain from '@/assets/images/fox/background/rain.png'
 import drizzle from '@/assets/images/fox/background/drizzle.png'
 import defaultGRound from '@/assets/images/fox/background/defaultGround.png'
 import blueGround from '@/assets/images/fox/background/blueGround.png'
+import smoke from '@/assets/images/fox/background/smoke.png'
+import sand from '@/assets/images/fox/background/sand.png'
+import sandCloud from '@/assets/images/fox/background/sandCloud.png'
+import ashCloud from '@/assets/images/fox/background/ashCloud.png'
+import volcanicGround from '@/assets/images/fox/background/volcanicGround.png'
+
+
+
+
 // Accessories
 import waterBottle from '@/assets/images/fox/accessories/waterBottle.png';
 
@@ -106,28 +115,43 @@ export default function TabOneScreen() {
 
   // Function to choose the background based on the weather
   const getBackgroundImage = () => {
-    if (weather.main === 'Clear' && weather.temperature !== null && weather.temperature > 0) {
-      return [sunShine]; // Return both images
-    }
     if (weather.main === 'Clear') return [sunShine];
-    if (weather.main === 'Clouds' || 'Mist' || 'Haze' || 'Fog') return [clouds];
+    if (weather.main === 'Clouds') return [clouds];
+    if (weather.main === 'Mist') return [clouds];
+    if (weather.main === 'Haze') return [clouds];
+    if (weather.main === 'Fog') return [clouds];
     if (weather.main === 'Drizzle') return [drizzle, clouds, ];
     if (weather.main === 'Rain') return [water, rain, clouds,];
-    if (weather.main === 'Thunderstorm' || 'Tornado') return [drowningWater];
+    if (weather.main === 'Thunderstorm') return [drowningWater];
+    if (weather.main === 'Tornado') return [drowningWater];
+    if (weather.main === 'Smoke') return [ clouds];
     if (weather.main === 'Snow') return [ fallingSnow,];
-    return [blankHead]; // default background
+    if (weather.main === 'Sand') return [sandCloud];
+    if (weather.main === 'Dust') return [clouds];
+    if (weather.main === 'Ash') return [ashCloud];
+    if (weather.main === 'Squall') return [clouds];
+    return [clouds]; // default background
   };
     // Function to choose the background based on the weather
     const getGroundImage = () => {
       if (weather.main === 'Clear' && weather.temperature !== null && weather.temperature > 0) {
         return [greenGround]; // Return both images
       }
-      if (weather.main === 'Clear') return [defaultGRound, sunGlasses];
-      if (weather.main === 'Clouds' || 'Mist' || 'Haze' || 'Fog') return [blueGround];
+      if (weather.main === 'Clear') return [defaultGRound];
+      if (weather.main === 'Clouds') return [blueGround];
+      if (weather.main === 'Mist') return [blueGround];
+      if (weather.main === 'Haze') return [blueGround];
+      if (weather.main === 'Fog') return [blueGround];
       if (weather.main === 'Drizzle') return [blueGround];
       if (weather.main === 'Rain') return [ blueGround ];
-      if (weather.main === 'Thunderstorm' || 'Tornado') return [ drowningWater, clouds];
+      if (weather.main === 'Thunderstorm') return [ drowningWater, clouds];
+      if (weather.main === 'Tornado') return [ drowningWater, clouds];
+      if (weather.main === 'Smoke') return [ defaultGRound, smoke, ];
       if (weather.main === 'Snow') return [snow];
+      if (weather.main === 'Sand') return [sand];
+      if (weather.main === 'Dust') return [sand];
+      if (weather.main === 'Ash') return [volcanicGround];
+      if (weather.main === 'Squall') return [blueGround];
       return [defaultGRound]; // default background
     };
 
