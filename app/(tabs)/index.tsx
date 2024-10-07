@@ -411,6 +411,7 @@ const getBackgroundImage = (): any[] => {
 
           
           </> 
+          {/* 
           {weather.temperature !== null  && !showMoreInfo ? (
             <>
             <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
@@ -420,6 +421,18 @@ const getBackgroundImage = (): any[] => {
             </>
           ) : (
             <Text>Fetching weather data...</Text>
+          )}*/}
+
+          {!weather.temperature && (
+            <Text>Fetching weather data...</Text>
+          )}
+          {weather.temperature !== null && !showMoreInfo && (
+               <>
+               <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
+               <Text style={[styles.deets, { color: getTextColor() }]}>Feels like: {weather.feelsLike} °C</Text>
+               <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
+               <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
+               </>
           )}
                     {/* Conditionally Render More Info */}
                     {showMoreInfo && (
