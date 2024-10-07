@@ -5,6 +5,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import * as Location from 'expo-location';
 import { useAppContext } from '@/app/AppContext'; // Import the context
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 
 // Get screen dimensions
@@ -17,7 +18,6 @@ import defaultFrame from '@/assets/images/fox/foxBody.png';
 import customBody1 from '@/assets/images/owl/owlBody.png';
 import customBody2 from '@/assets/images/bear/bearBody.png';
 import customBody3 from '@/assets/images/deer/deerBody.png';
-import body from '@/assets/images/fox/body.png'
 
 // Head
 import winterHat from '@/assets/images/fox/head/winterHat.png';
@@ -70,6 +70,10 @@ import rainPants from '@/assets/images/fox/leggings/rainPants.png';
 import shorts from '@/assets/images/fox/leggings/shorts.png';
 
 export default function TabOneScreen() {
+
+  const [loading, setLoading] = useState(false);
+
+
   const [weather, setWeather] = useState({
     temperature: null,
     feelsLike: null,
@@ -79,8 +83,11 @@ export default function TabOneScreen() {
     main: '',
     sunrise: null,
     sunset: null,
+    summary: ''
   });
   const [selectedBody, setSelectedBody] = useState<string>('defaultFrame'); // Add selectedBody state
+  const [showMoreInfo, setShowMoreInfo] = useState(false); // Track whether to show more info
+
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -108,31 +115,37 @@ export default function TabOneScreen() {
     };
   }, []);
 
+    // Toggle whether more info is shown
+    const toggleMoreInfo = () => {
+      setShowMoreInfo(!showMoreInfo);
+    };
 
 
   const fetchWeatherData = async () => {
     if (location && apiKey) {
       const { latitude, longitude } = location;
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=en`;
+      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=en`;
+      'https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&appid=${apiKey}'
       try {
         const response = await axios.get(url);
         const data = response.data;
         setWeather({
-          temperature: data.main.temp,
-          feelsLike: data.main.feels_like,
-          windSpeed: data.wind.speed,
-          description: data.weather[0].description,
-          humidity: data.main.humidity,
-          main: data.weather[0].main,
-          sunrise: data.sys.sunrise, // Fetch sunrise time
-          sunset: data.sys.sunset,   // Fetch sunset time
+          temperature: data.current.temp,
+          feelsLike: data.current.feels_like,
+          windSpeed: data.current.wind_speed,
+          description: data.current.weather[0].description,
+          humidity: data.current.humidity,
+          main: data.current.weather[0].main,
+          sunrise: data.current.sunrise, // Fetch sunrise time
+          sunset: data.current.sunset,   // Fetch sunset time
+          summary: data.daily[0].summary,
         });
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }
     }
   };
-
+console.log(weather.summary)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -220,46 +233,97 @@ export default function TabOneScreen() {
 
 
   // Function to choose the background based on the weather
-  const getBackgroundImage = () => {
-    if (weather.main === 'Clear') return [blankHead];
-    if (weather.main === 'Clouds') return [clouds];
-    if (weather.main === 'Mist') return [clouds];
-    if (weather.main === 'Haze') return [clouds];
-    if (weather.main === 'Fog') return [clouds];
-    if (weather.main === 'Drizzle') return [drizzle, clouds, ];
-    if (weather.main === 'Rain') return [water, rain, clouds,];
-    if (weather.main === 'Thunderstorm') return [drowningWater];
-    if (weather.main === 'Tornado') return [drowningWater];
-    if (weather.main === 'Smoke') return [ clouds];
-    if (weather.main === 'Snow') return [ fallingSnow,];
-    if (weather.main === 'Sand') return [sandCloud];
-    if (weather.main === 'Dust') return [clouds];
-    if (weather.main === 'Ash') return [ashCloud];
-    if (weather.main === 'Squall') return [clouds];
-    return [clouds]; // default background
-  };
-    // Function to choose the background based on the weather
-    const getGroundImage = () => {
-      if (weather.main === 'Clear' && weather.temperature !== null && weather.temperature > 0) {
-        return [greenGround]; // Return both images
-      }
-      if (weather.main === 'Clear') return [defaultGRound];
-      if (weather.main === 'Clouds') return [blueGround];
-      if (weather.main === 'Mist') return [blueGround];
-      if (weather.main === 'Haze') return [blueGround];
-      if (weather.main === 'Fog') return [blueGround];
-      if (weather.main === 'Drizzle') return [blueGround];
-      if (weather.main === 'Rain') return [ blueGround ];
-      if (weather.main === 'Thunderstorm') return [ drowningWater, clouds];
-      if (weather.main === 'Tornado') return [ drowningWater, clouds];
-      if (weather.main === 'Smoke') return [ defaultGRound, smoke, ];
-      if (weather.main === 'Snow') return [snow];
-      if (weather.main === 'Sand') return [sand];
-      if (weather.main === 'Dust') return [sand];
-      if (weather.main === 'Ash') return [volcanicGround];
-      if (weather.main === 'Squall') return [blueGround];
-      return [defaultGRound]; // default background
+const getBackgroundImage = (): any[] => {
+    const weatherMap: Record<string, Record<string, any[]>> = {
+      'Clear': { 'clear sky': [blankHead] },
+      'Clouds': { default: [clouds] },
+      'Mist': { default: [clouds] },
+      'Fog': { default: [clouds] },
+      'Haze': { default: [clouds] },
+      'Drizzle': {
+        'light intensity drizzle': [drizzle, clouds],
+        'drizzle rain': [rain, clouds],
+        'heavy intensity drizzle': [rain, clouds],
+      },
+      'Rain': {
+        'light rain': [drizzle, clouds],
+        'moderate rain': [rain, clouds],
+        'heavy intensity rain': [rain, clouds],
+        'very heavy rain': [rain, clouds],
+        'extreme rain': [rain, clouds],
+        'freezing rain': [fallingSnow, drizzle, clouds],
+        'light intensity shower rain': [drizzle, clouds],
+        'shower rain': [rain, clouds],
+        'heavy intensity shower rain': [rain, clouds],
+        'ragged shower rain': [rain, clouds],
+      },
+      'Thunderstorm': {
+        'thunderstorm with light rain': [drizzle, clouds],
+        'thunderstorm with heavy rain': [rain, clouds],
+      },
+      'Smoke': { default: [ashCloud] },
+      'Snow': {
+        'light snow': [fallingSnow],
+        'snow': [fallingSnow],
+        'heavy snow': [fallingSnow],
+      },
+      'Sand': { default: [sandCloud] },
+      'Dust': { default: [ashCloud] },
+      'Ash': { default: [ashCloud] },
+      'Squall': { default: [clouds] },
     };
+
+    // Safely access weatherMap, and fall back to blankHead if nothing matches
+    return weatherMap[weather.main]?.[weather.description] || weatherMap[weather.main]?.default || [blankHead];
+};
+
+  
+  {Array.isArray(getBackgroundImage()) && getBackgroundImage().map((bg, index) => (
+    <Image key={index} source={bg} style={styles.background} />
+  ))}
+  
+  
+    // Function to choose the background based on the weather
+    const getGroundImage = (): any[] => {
+      const groundMap: Record<string, Record<string, any[]>> = {
+        'Clear': {
+          default: weather.temperature !== null && weather.temperature > 0 ? [greenGround] : [defaultGRound]
+        },
+        'Clouds': { default: [blueGround] },
+        'Mist': { default: [blueGround] },
+        'Haze': { default: [blueGround] },
+        'Fog': { default: [blueGround] },
+        'Drizzle': {
+          'light intensity drizzle': [blueGround],
+          'drizzle rain': [water, blueGround],
+          'heavy intensity drizzle': [water, blueGround]
+        },
+        'Rain': {
+          'light rain': [blueGround],
+          'moderate rain': [blueGround],
+          'heavy intensity rain': [drizzle, blueGround],
+          'very heavy rain': [rain, blueGround],
+          'extreme rain': [water, rain, blueGround],
+          'freezing rain': [snow],
+          'light intensity shower rain': [drizzle, blueGround],
+          'shower rain': [rain, blueGround],
+          'heavy intensity shower rain': [water, rain, blueGround],
+          'ragged shower rain': [drowningWater, rain, blueGround]
+        },
+        'Thunderstorm': { default: [drowningWater] },
+        'Tornado': { default: [drowningWater] },
+        'Smoke': { default: [defaultGRound, smoke] },
+        'Snow': { default: [snow] },
+        'Sand': { default: [sand] },
+        'Dust': { default: [sand] },
+        'Ash': { default: [volcanicGround] },
+        'Squall': { default: [blueGround] },
+      };
+    
+      // Safely return the appropriate ground image or a default fallback (defaultGRound)
+      return groundMap[weather.main]?.[weather.description] || groundMap[weather.main]?.default || [defaultGRound];
+    };
+    
 
 
   // Function to choose the right headwear
@@ -307,15 +371,19 @@ export default function TabOneScreen() {
       ) : (
         <>
           <Text style={[styles.title, { color: getTextColor() }]}>{weather.main}</Text>
+          <Text style={[styles.deg, { color: getTextColor() }]}>{weather.temperature} °C</Text>
           <>
-          <Image source={getSky()} style={styles.responsiveImage} />
+
+
+             {getGroundImage().map((bg, index) => (
+            <Image key={index} source={bg} style={styles.ground} />
+          ))}
+
+<Image source={getSky()} style={styles.responsiveImage} />
 
           {/* Map through background images */}
           {getBackgroundImage().map((bg, index) => (
             <Image key={index} source={bg} style={styles.background} />
-          ))}
-             {getGroundImage().map((bg, index) => (
-            <Image key={index} source={bg} style={styles.ground} />
           ))}
 
 <Image source={require('@/assets/images/fox/body.png')} style={styles.responsiveImage} />
@@ -340,11 +408,12 @@ export default function TabOneScreen() {
           {getFootwear().map((footItem, index) => (
             <Image key={index} source={footItem} style={styles.responsiveImage} />
           ))}
+
+          
           </> 
-          {weather.temperature !== null ? (
+          {weather.temperature !== null  && !showMoreInfo ? (
             <>
             <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
-            <Text style={[styles.deg, { color: getTextColor() }]}>{weather.temperature} °C</Text>
             <Text style={[styles.deets, { color: getTextColor() }]}>Feels like: {weather.feelsLike} °C</Text>
             <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
             <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
@@ -352,13 +421,29 @@ export default function TabOneScreen() {
           ) : (
             <Text>Fetching weather data...</Text>
           )}
+                    {/* Conditionally Render More Info */}
+                    {showMoreInfo && (
+            <>
+              {/* Insert additional data here */}
+              <Text style={[styles.summary, { color: '#EBCEF8' }]}>{weather.summary}</Text>
+            </>
+          )}
 
             <View style={styles.separator}/>
             <TouchableOpacity onPress={fetchWeatherData} style={styles.refreshButton}>
-            <Text style={styles.refreshButtonText}>Refresh Weather</Text>
+            <MaterialCommunityIcons
+          name="refresh" // Material UI refresh icon name
+          color={loading ? 'white' : getTextColor()} // Change color when loading
+          style={styles.icon}
+        />
+          </TouchableOpacity>
+                    {/* Button to show more info */}
+                    <TouchableOpacity onPress={toggleMoreInfo} style={styles.infoButton}>
+            <Text style={styles.infoButtonText}>{showMoreInfo ? 'Show Less Info' : 'Show More Info'}</Text>
           </TouchableOpacity>
           
         </>
+        
       )}
     </View>
   );
@@ -395,9 +480,15 @@ const styles = StyleSheet.create({
     right: 8,
   },
   desc: {
-    fontSize: 28,
+    fontSize: 26,
     marginTop: 'auto',
     fontWeight: '700',
+  },
+  summary: {
+    fontSize: 26,
+    marginTop: 'auto',
+    fontWeight: '700',
+    textAlign: 'center'
   },
   responsiveImage: {
     position: 'absolute',
@@ -419,22 +510,41 @@ const styles = StyleSheet.create({
     height: screenWidth * 1, // Keep it square
   },
   refreshButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#D69DF1',
-    borderRadius: 5,
-    marginBottom: screenWidth * 0.1,
+    position: 'absolute',
+    top: 50,
+    right: 8
   },
   refreshButtonText: {
     color: 'black',
     fontWeight: 'bold',
     fontSize: 16,
   },
+  icon: {
+    fontSize: 26,
+  },
   separator: {
     marginVertical: 10,
     height: 1,
     width: '40%',
     backgroundColor: '#D69DF1'
+  },
+  infoButton: {
+
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      backgroundColor: '#D69DF1',
+      borderRadius: 5,
+      marginBottom: screenWidth * 0.1,
+
+  },
+  infoButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  moreInfoContainer: {
+    marginTop: 20,
+    alignItems: 'center',
   },
   error: {
     color: 'red',
