@@ -1,4 +1,4 @@
-import { StyleSheet, Alert, Image, TouchableOpacity, Dimensions, DeviceEventEmitter } from 'react-native';
+import { StyleSheet, Alert, Image, TouchableOpacity, Dimensions, DeviceEventEmitter, StatusBar } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import axios from 'axios';
@@ -532,8 +532,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 350,
     backgroundColor: '#09011f',
+    marginTop: StatusBar.currentHeight
   },
   title: {
     fontSize: 32,
