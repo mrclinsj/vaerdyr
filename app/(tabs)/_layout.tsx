@@ -59,6 +59,7 @@ export default function TabLayout() {
   options={{
     title: 'Settings',
     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+    headerShown: false,  // Add this line to hide the header
   }}
 />
     </Tabs>
