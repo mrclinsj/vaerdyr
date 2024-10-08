@@ -69,6 +69,9 @@ import joggers from '@/assets/images/fox/leggings/joggers.png';
 import rainPants from '@/assets/images/fox/leggings/rainPants.png';
 import shorts from '@/assets/images/fox/leggings/shorts.png';
 
+
+
+
 export default function TabOneScreen() {
 
   const [loading, setLoading] = useState(false);
