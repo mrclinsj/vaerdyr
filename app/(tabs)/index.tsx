@@ -72,7 +72,8 @@ import shorts from '@/assets/images/fox/leggings/shorts.png';
 export default function TabOneScreen() {
 
   const [loading, setLoading] = useState(false);
-
+  const [count, setCount] = useState(0); // Start count at 0
+console.log(count)
 
   const [weather, setWeather] = useState({
     temperature: null,
@@ -83,7 +84,11 @@ export default function TabOneScreen() {
     main: '',
     sunrise: null,
     sunset: null,
-    summary: ''
+    summary: '',
+    dailyRain: null,
+    lowTemp: null,
+    highTemp: null,
+    dailyTemp: null
   });
   const [selectedBody, setSelectedBody] = useState<string>('defaultFrame'); // Add selectedBody state
   const [showMoreInfo, setShowMoreInfo] = useState(false); // Track whether to show more info
@@ -138,14 +143,18 @@ export default function TabOneScreen() {
           main: data.current.weather[0].main,
           sunrise: data.current.sunrise, // Fetch sunrise time
           sunset: data.current.sunset,   // Fetch sunset time
-          summary: data.daily[0].summary,
-        });
+          summary: data.daily[count].summary, //more info
+          dailyRain: data.daily[count].pop, //more info
+          lowTemp: data.daily[count].temp.min,
+          highTemp: data.daily[count].temp.max,
+          dailyTemp: data.daily[0].temp.day, //more info
+
+        }); 
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }
     }
   };
-console.log(weather.summary)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -154,17 +163,26 @@ console.log(weather.summary)
         Alert.alert('Permission Denied', 'Unable to access location');
         return;
       }
-
+  
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location.coords);
     })();
   }, []);
-
+  
   useEffect(() => {
     if (location) {
-      fetchWeatherData();
+      fetchWeatherData(); // Fetch weather data when location is available on initial load
     }
-  }, [location]);
+  }, [location]); // Trigger when 'location' is set
+  
+  // This effect will trigger when 'count' changes (for navigation purposes)
+  useEffect(() => {
+    if (location) {
+      fetchWeatherData(); // Fetch data for the incremented or decremented count
+    }
+  }, [count]);
+  
+  
 
 
     // Function to get current time in Unix format
@@ -201,6 +219,7 @@ console.log(weather.summary)
 
     return '#000000'; // Default text color
   };
+  
   
   // Function to dynamically select the body image
   const getBodyImage = () => {
@@ -324,7 +343,7 @@ const getBackgroundImage = (): any[] => {
       return groundMap[weather.main]?.[weather.description] || groundMap[weather.main]?.default || [defaultGRound];
     };
     
-
+{/* TANKE, ENDRE KARAKTERKLÆR BASERT PÅ DAGENS VÆR ISTEDENFOR I NÅTID ELLER LA KARAKTER ENDRE KLÆR NÅR MAN GÅR FREM I TID BASERT PÅ TEMP OG VÆRFORHOLD */}
 
   // Function to choose the right headwear
   const getHeadwear = () => {
@@ -430,26 +449,69 @@ const getBackgroundImage = (): any[] => {
                <>
                <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
                <Text style={[styles.deets, { color: getTextColor() }]}>Feels like: {weather.feelsLike} °C</Text>
-               <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
-               <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
+              <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
+              <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
                </>
           )}
                     {/* Conditionally Render More Info */}
                     {showMoreInfo && (
             <>
               {/* Insert additional data here */}
-              <Text style={[styles.summary, { color: '#EBCEF8' }]}>{weather.summary}</Text>
+              <Text style={[styles.summary, { color: getTextColor() }]}>{weather.summary}</Text>
+              <Text style={[styles.deets, { color: getTextColor() }]}>Rainchance: {weather.dailyRain !== null && weather.dailyRain * 100}%</Text>
+              <Text style={[styles.deets, { color: getTextColor() }]}>Low: {weather.lowTemp} °C</Text>
+              <Text style={[styles.deets, { color: getTextColor() }]}>High: {weather.highTemp} °C</Text>
+              
             </>
           )}
 
             <View style={styles.separator}/>
-            <TouchableOpacity onPress={fetchWeatherData} style={styles.refreshButton}>
+            <TouchableOpacity
+  onPress={() => {
+    setCount(0); // Reset count to 0, which will trigger useEffect to fetch data
+  }}
+  style={styles.refreshButton}
+>
             <MaterialCommunityIcons
           name="refresh" // Material UI refresh icon name
           color={loading ? 'white' : getTextColor()} // Change color when loading
           style={styles.icon}
         />
           </TouchableOpacity>
+          {showMoreInfo && (
+  <TouchableOpacity
+    onPress={() => {
+      setCount(prevCount => (prevCount < 7 ? prevCount + 1 : prevCount)); // Increment only if count is less than 7
+
+    }}
+    style={styles.nextButton}
+  >
+    <MaterialCommunityIcons
+      name="arrow-right"
+      color={getTextColor()}
+      style={styles.arrowIcon}
+    />
+  </TouchableOpacity>
+)}
+
+{showMoreInfo && (
+  <TouchableOpacity
+    onPress={() => {
+      setCount(prevCount => (prevCount > 0 ? prevCount - 1 : prevCount)); // Decrement only if count is greater than 0
+
+    }}
+    style={styles.prevButton}
+  >
+    <MaterialCommunityIcons
+      name="arrow-left"
+      color={getTextColor()}
+      style={styles.arrowIcon}
+    />
+  </TouchableOpacity>
+)}
+
+
+          
                     {/* Button to show more info */}
                     <TouchableOpacity onPress={toggleMoreInfo} style={styles.infoButton}>
             <Text style={styles.infoButtonText}>{showMoreInfo ? 'Show Less Info' : 'Show More Info'}</Text>
@@ -527,6 +589,18 @@ const styles = StyleSheet.create({
     top: 50,
     right: 8
   },
+  prevButton: {
+    position: 'absolute',
+    bottom: 0,
+    left: 8,
+    marginBottom: screenWidth * 0.1,
+  },
+  nextButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 8,
+    marginBottom: screenWidth * 0.1,
+  },
   refreshButtonText: {
     color: 'black',
     fontWeight: 'bold',
@@ -534,6 +608,9 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 26,
+  },
+  arrowIcon: {
+    fontSize: 30,
   },
   separator: {
     marginVertical: 10,
