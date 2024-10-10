@@ -76,7 +76,6 @@ export default function TabOneScreen() {
 
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(0); // Start count at 0
-console.log(count)
 
   const [weather, setWeather] = useState({
     temperature: null,
@@ -153,6 +152,7 @@ console.log(count)
           dailyTemp: data.daily[0].temp.day, //more info
 
         }); 
+        setLoading(false)
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }
@@ -175,6 +175,7 @@ console.log(count)
   useEffect(() => {
     if (location) {
       fetchWeatherData(); // Fetch weather data when location is available on initial load
+      setLoading(true)
     }
   }, [location]); // Trigger when 'location' is set
   
@@ -182,6 +183,7 @@ console.log(count)
   useEffect(() => {
     if (location) {
       fetchWeatherData(); // Fetch data for the incremented or decremented count
+      setLoading(true)
     }
   }, [count]);
   
@@ -449,23 +451,23 @@ const getBackgroundImage = (): any[] => {
             <Text>Fetching weather data...</Text>
           )}
           {weather.temperature !== null && !showMoreInfo && (
-               <>
+               <View style={styles.weatherInfo}>
                <Text style={[styles.desc, { color: getTextColor() }]}>{weather.description}</Text>
                <Text style={[styles.deets, { color: getTextColor() }]}>Feels like: {weather.feelsLike} °C</Text>
               <Text style={[styles.deetsBottom, { color: getTextColor() }]}>Humidity: {weather.humidity}%</Text>
               <Text style={[styles.deets, { color: getTextColor() }]}>Wind: {weather.windSpeed} m/s</Text>
-               </>
+               </View>
           )}
                     {/* Conditionally Render More Info */}
                     {showMoreInfo && (
-            <>
+             <View style={styles.weatherInfo}>
               {/* Insert additional data here */}
               <Text style={[styles.summary, { color: getTextColor() }]}>{weather.summary}</Text>
               <Text style={[styles.deets, { color: getTextColor() }]}>Rainchance: {weather.dailyRain !== null && weather.dailyRain * 100}%</Text>
               <Text style={[styles.deets, { color: getTextColor() }]}>Low: {weather.lowTemp} °C</Text>
               <Text style={[styles.deets, { color: getTextColor() }]}>High: {weather.highTemp} °C</Text>
               
-            </>
+            </View>
           )}
 
             <View style={styles.separator}/>
@@ -534,6 +536,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#09011f',
     marginTop: StatusBar.currentHeight
+  },
+  weatherInfo: {
+marginTop: 'auto',
+backgroundColor: '#87CEEB',
+paddingHorizontal: 10,
+borderRadius: 10,
+alignItems: 'center',
   },
   title: {
     fontSize: 32,
@@ -627,7 +636,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 12,
       backgroundColor: '#D69DF1',
       borderRadius: 5,
-      marginBottom: screenWidth * 0.1,
+      marginBottom: 20,
 
   },
   infoButtonText: {
