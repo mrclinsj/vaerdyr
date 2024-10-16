@@ -87,10 +87,11 @@ export default function TabOneScreen() {
     sunrise: null,
     sunset: null,
     summary: '',
+    dt: null,
     dailyRain: null,
     lowTemp: null,
     highTemp: null,
-    dailyTemp: null
+    dailyTemp: null,
   });
   const [selectedBody, setSelectedBody] = useState<string>('defaultFrame'); // Add selectedBody state
   const [showMoreInfo, setShowMoreInfo] = useState(false); // Track whether to show more info
@@ -146,12 +147,46 @@ export default function TabOneScreen() {
           sunrise: data.current.sunrise, // Fetch sunrise time
           sunset: data.current.sunset,   // Fetch sunset time
           summary: data.daily[count].summary, //more info
+          dt: data.daily[count].dt, //timestamp per day
           dailyRain: data.daily[count].pop, //more info
           lowTemp: data.daily[count].temp.min,
           highTemp: data.daily[count].temp.max,
-          dailyTemp: data.daily[0].temp.day, //more info
+          dailyTemp: data.daily[count].temp.day, //more info
 
         }); 
+       // Define the expected structure of the 'day' object
+interface DailyWeather {
+  temp: {
+    min: number;
+    max: number;
+    day: number;
+  };
+  pop: number;
+  summary: number;
+  dt: number;
+}
+
+const dailyTemps = data.daily.slice(0, 7).map((day: DailyWeather) => {
+  const date = new Date(day.dt * 1000); // Convert Unix timestamp to milliseconds
+  const readableDate = date.toLocaleDateString('en-GB', {
+    weekday: 'long', // Show day of the week (e.g., Monday)
+    year: 'numeric', // Show year (e.g., 2023)
+    month: 'long', // Show month (e.g., October)
+    day: 'numeric', // Show day of the month (e.g., 9)
+  });
+
+  return {
+    dayTemp: day.temp.day,
+    lowTemp: day.temp.min,
+    highTemp: day.temp.max,
+    dailyRain: day.pop * 100, // Convert to percentage
+    summary: day.summary, // Include weather summary
+    dt: readableDate, // Use the readable date
+  };
+});
+
+console.log(dailyTemps);
+        
         setLoading(false)
       } catch (error) {
         console.error('Error fetching weather data:', error);
